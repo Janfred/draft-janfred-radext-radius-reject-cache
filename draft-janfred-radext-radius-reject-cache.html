@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>Reject Caching and Delaying Responses in RADIUS</title>
+<meta content="Jan-Frederik Rieckers" name="author">
+<meta content="
+       In a multi-hop RADIUS proxy fabic, misbehaving clients can cause high server loads.
+To reduce server load, this document adds a method for RADIUS servers to signal to proxies that they should cache a reject or delay the response for a certain amount of time. 
+    " name="description">
+<meta content="xml2rfc 3.33.0" name="generator">
+<meta content="RADIUS" name="keyword">
+<meta content="draft-janfred-radext-radius-reject-cache-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.33.0
+    Python 3.12.13
+    ConfigArgParse 1.7
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.0.2
+    platformdirs 4.9.6
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.33.1
+    wcwidth 0.7.0
+-->
+<link href="draft-janfred-radext-radius-reject-cache.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
+}
+svg {
+  display: block;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
+}
+.alignCenter {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+      float: none;
+    }
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a {
+  text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
+}
+.iref + a[href].internal {
+  color: var(--text-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
+  }
+  @media print {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+  & .prepared {
+    float: right;
+  }
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
+  }
+}
+
+/* Comments */
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
+      }
+    }
+    & a.toplink {
+      float: right;
+    }
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
+    }
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc {
+    page-break-before: always;
+    border-top: none;
+    padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">RADIUS Reject Caching</td>
+<td class="right">June 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Rieckers</td>
+<td class="center">Expires 10 December 2026</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">RADIUS EXTensions</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-janfred-radext-radius-reject-cache-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-06-08" class="published">8 June 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Experimental</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2026-12-10">10 December 2026</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">J.-F. Rieckers</div>
+<div class="org">DFN</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">Reject Caching and Delaying Responses in RADIUS</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">In a multi-hop RADIUS proxy fabic, misbehaving clients can cause high server loads.
+To reduce server load, this document adds a method for RADIUS servers to signal to proxies that they should cache a reject or delay the response for a certain amount of time.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-about-this-document">
+<a href="#name-about-this-document" class="section-name selfRef">About This Document</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-janfred-radext-radius-reject-cache/">https://datatracker.ietf.org/doc/draft-janfred-radext-radius-reject-cache/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">
+        Discussion of this document takes place on the
+        RADIUS EXTensions  mailing list (<span><a href="mailto:radext@ietf.org">mailto:radext@ietf.org</a></span>),
+        which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/radext/">https://mailarchive.ietf.org/arch/browse/radext/</a></span>.
+        Subscribe at <span><a href="https://www.ietf.org/mailman/listinfo/radext/">https://www.ietf.org/mailman/listinfo/radext/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 10 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-protocol-description" class="internal xref">Protocol Description</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-proxy-capability-attribute" class="internal xref">Proxy-Capability Attribute</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-response-delay-attribute" class="internal xref">Response-Delay Attribute</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-request-block-attribute" class="internal xref">Request-Block Attribute</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3.2.1">
+                    <p id="section-toc.1-1.3.2.3.2.1.1"><a href="#section-3.3.1" class="auto internal xref">3.3.1</a>.  <a href="#name-request-block-attribute-and" class="internal xref">Request-Block-Attribute and Request-Block-Extended-Attribute</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4">
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-radius-instance-behavior" class="internal xref">RADIUS Instance behavior</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4.2.1">
+                    <p id="section-toc.1-1.3.2.4.2.1.1"><a href="#section-3.4.1" class="auto internal xref">3.4.1</a>.  <a href="#name-radius-proxy" class="internal xref">RADIUS proxy</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4.2.2">
+                    <p id="section-toc.1-1.3.2.4.2.2.1"><a href="#section-3.4.2" class="auto internal xref">3.4.2</a>.  <a href="#name-enforcing-instance" class="internal xref">Enforcing Instance</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-recommendations-for-operato" class="internal xref">Recommendations for Operators</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-document-status" class="internal xref">Document Status</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#appendix-A.1" class="auto internal xref">A.1</a>.  <a href="#name-change-history" class="internal xref">Change History</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">The RADIUS protocol <span>[<a href="#RFC2865" class="cite xref">RFC2865</a>]</span> does not have a means to signal a server overload or a congestion to RADIUS clients.
+These overload situations may be a result of a high load of legitimate traffic and might even be worsened by retransmissions of packets the server failed to answer due to the high load.
+These situation can happen in a lost of scenarios.
+In RADIUS proxy fabric, a server overload may even result from a single RADIUS client, for example when an EAP supplicant immediately starts a new authentication try without delay when getting a reject.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">Especially in RADIUS proxy fabrics, the impact of misbehaving clients on the whole proxy chain can be reduced by reducing the packet load at the entry level or as early in the proxy chain as possible.
+Since the end user device cannot be controlled, we have to rely on the RADIUS proxies to implement coutermeasures.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">These countermeasures can be used to reduce the load by one of two methods.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">First, the response to requests can be delayed. By delaying RADIUS responses, the client has to wait for the answer to send its next request, which decreases the packet load on the server.
+This method can also be used to slow down clients that immediately retry the authentication once they receive a reject.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">When a home server knows that an authentication of this client cannot succeed (for example because it used an expired certificate with EAP-TLS), and the client keeps retrying, any RADIUS actor along the proxy chain could generate a reject for this specific user.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">Pushing these countermeasures to the the earliest possible RADIUS Instance inside the proxy chain has multiple advantages over rejecting it at the home server.
+First, it reduces the load on all proxies in the proxy chain, since they do not need to forward traffic that will get rejected anyway.
+Secondly, when the response should get delayed, pushing this delay as far down the proxy chain prevents RADIUS retransmissions.
+When the RADIUS proxy already has the response, it then does not need to proxy the retransmitted RADIUS packets, which reduces the load for the RADIUS proxies in the later proxy chain.
+Instead, the RADIUS proxy just ignores the retransmission, since it already has an answer for this RADIUS packet, but the answer is just delayed.<a href="#section-1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">Additionally, we use the following terms in this document, in the meaning as defined here:<a href="#section-2-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-3">
+        <dt id="section-2-3.1">RADIUS Instance</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.2">
+          <p id="section-2-3.2.1">A single device or software module that implements the RADIUS protocol<a href="#section-2-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.3">RADIUS Client</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.4">
+          <p id="section-2-3.4.1">A RADIUS Instance that sends RADIUS requests and receives RADIUS responses. This is only in reference to a single RADIUS hop.<a href="#section-2-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.5">RADIUS Server</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.6">
+          <p id="section-2-3.6.1">A RADIUS Instance that receives RADIUS requests and sends RADIUS responses. Similar to the RADIUS Client, this is only in reference to a single RADIUS hop.<a href="#section-2-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.7">RADIUS Proxy</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.8">
+          <p id="section-2-3.8.1">A single device or software module that acts as RADIUS server and RADIUS client at the same time. It receives RADIUS requests and forwards them towards the next RADIUS proxy, usually based on the realm of the User-Name attribute.<a href="#section-2-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.9">RADIUS Proxy Chain</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.10">
+          <p id="section-2-3.10.1">the list of RADIUS Instances that a RADIUS Request traverses from the first RADIUS Client across any number of RADIUS proxies to the final RADIUS Server that responds to the RADIUS Request. When referring to the RADIUS Request, the chain starts from the first RADIUS client sending the RADIUS Request and ends at the last RADIUS Server. For the RADIUS Response, the chain is reversed. The terms "earlier" and "later" will always be used together with a reference to a request or a response. As example: a RADIUS proxy earlier in the chain for a request is located later in the chain for the response.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.11">Enforcing Instance</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.12">
+          <p id="section-2-3.12.1">The RADIUS Instance that enforces the response delay or the request blocking.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="protocol-description">
+<section id="section-3">
+      <h2 id="name-protocol-description">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-protocol-description" class="section-name selfRef">Protocol Description</a>
+      </h2>
+<p id="section-3-1">The protocol extension consists of two parts:
+First, any RADIUS proxy in the proxy chain capable of either of the two countermeasures needs to signal this capability to the following RADIUS proxies and the home server, so they know whether or not they can use this feature.
+Second, for the reply, the home server or RADIUS proxy needs to signal the reply policy back to the previous RADIUS proxies.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<div id="proxy-capability-attribute">
+<section id="section-3.1">
+        <h3 id="name-proxy-capability-attribute">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-proxy-capability-attribute" class="section-name selfRef">Proxy-Capability Attribute</a>
+        </h3>
+<p id="section-3.1-1">The Proxy-Capability Attribute is used to signal the capability of a RADIUS proxy to any RADIUS entity in the later proxy chain.
+With the help of this, on the reply path, a RADIUS proxy can determine whether the requested action should be performed by itself or the packet will pass through another capable proxy later which can then perform the actions.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">The Proxy-Capability Attribute is of type string as defined in <span>[<a href="#RFC8044" class="cite xref">RFC8044</a>], <a href="https://rfc-editor.org/rfc/rfc8044#section-3.5" class="relref">Section 3.5</a></span>.
+The value of the Proxy-Capability Attribute is a concatenated list of the proxy capabilities the RADIUS Instance has.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">Correct formal description: TODO<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">Informal description: concatenate all capabilities. values up to 127 are encoded in one byte, extended capabilities are encoded as two bytes.
+For parsing, the receiver can look at the first bit, if it is a 0 it is a single-byte value, if it is a 1, then the capability is a two-byte value. This allows for simple extension, while keeping it as simple and short as possible. The attribute <span class="bcp14">MUST NOT</span> include a capability multiple times.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1-5">Each capable RADIUS Instance in the RADIUS Proxy Chain <span class="bcp14">SHOULD</span> add the Proxy-Capability Attribute for Access-Request and Accounting-Request packets before forwarding the RADIUS packet to the next RADIUS instance.
+Future capabilityes <span class="bcp14">MAY</span> specify capabilities for other RADIUS packet types. The capabilities defined in this document <span class="bcp14">SHOULD</span> only be added for Access-Request and Accounting-Request packets when Proxy-Capabilitiy is used with other RADIUS packets.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">When a capable RADIUS proxy receives a RADIUS packet with the Proxy-Capability Attribute, the RADIUS Proxy <span class="bcp14">SHOULD</span> add its own capabilities to the Attribute if the capability is not yet included. The RADIUS Proxy <span class="bcp14">MUST NOT</span> remove existing capabilities, unless explicitly configured to remove them. As a hint, administrators <span class="bcp14">SHOULD</span> only configure the removal of capabilities when they know that the capability is not honored.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
+<p id="section-3.1-7">In this document, we define two capabilities:<a href="#section-3.1-7" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3.1-8">
+          <dt id="section-3.1-8.1">Capability Response-Delay-Capable</dt>
+          <dd style="margin-left: 1.5em" id="section-3.1-8.2">
+            <p id="section-3.1-8.2.1">The Capability Response-Delay-Capable with value 1 is used to signal that the RADIUS Instance is capable of delaying RADIUS Response packets.<a href="#section-3.1-8.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-3.1-8.3">Capability Request-Block-Capable</dt>
+          <dd style="margin-left: 1.5em" id="section-3.1-8.4">
+            <p id="section-3.1-8.4.1">The capability Request-Block-Capable with value 2 is used to signal that the RADIUS Instance is capable of blocking RADIUS Requests that match specific criteria and sending an Access-Reject instead on behalf of the home server.<a href="#section-3.1-8.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="response-delay-attribute">
+<section id="section-3.2">
+        <h3 id="name-response-delay-attribute">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-response-delay-attribute" class="section-name selfRef">Response-Delay Attribute</a>
+        </h3>
+<p id="section-3.2-1">The Response-Delay Attribute is used to signal the desire of the home server that sending of the RADIUS response should be delayed for a certain amount.
+The Response-Delay Attribute is of type integer as defined in <span>[<a href="#RFC8044" class="cite xref">RFC8044</a>], <a href="https://rfc-editor.org/rfc/rfc8044#section-3.1" class="relref">Section 3.1</a></span>.
+The value is the delay in milliseconds.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="request-block-attribute">
+<section id="section-3.3">
+        <h3 id="name-request-block-attribute">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-request-block-attribute" class="section-name selfRef">Request-Block Attribute</a>
+        </h3>
+<p id="section-3.3-1">The Request-Block Attribute is used to signal the desire of the home server that future requests that match certain criteria should be rejected by a RADIUS Instance on behalf of the home server.
+The Request-Block Attribute is of type tlv as defined in <span>[<a href="#RFC8044" class="cite xref">RFC8044</a>], <a href="https://rfc-editor.org/rfc/rfc8044#section-3.13" class="relref">Section 3.13</a></span>.
+The sub-attributes are defined as follows:<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3.3-2">
+          <dt id="section-3.3-2.1">Request-Block-Period</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-2.2">
+            <p id="section-3.3-2.2.1">This sub-attribute contains the time span in seconds during which requests matching the description should be rejected. The attribute is of type integer as defined in <span>[<a href="#RFC8044" class="cite xref">RFC8044</a>], <a href="https://rfc-editor.org/rfc/rfc8044#section-3.1" class="relref">Section 3.1</a></span>.<a href="#section-3.3-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-3.3-2.3">Request-Block-Attributes</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-2.4">
+            <p id="section-3.3-2.4.1">This sub-attribute contains a list of attribute types that should be used to match authentication requests of the same user. The attribute is of type string as defined in <span>[<a href="#RFC8044" class="cite xref">RFC8044</a>], <a href="https://rfc-editor.org/rfc/rfc8044#section-3.5" class="relref">Section 3.5</a></span> and contains a concatenated list of one byte attribute types.<a href="#section-3.3-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-3.3-2.5">Request-Block-Extended-Attribute</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-2.6">
+            <p id="section-3.3-2.6.1">This sub-attribute contains a reference to a single extended attribute that should be included in the match. The attribute is of type string as defined in <span>[<a href="#RFC8044" class="cite xref">RFC8044</a>], <a href="https://rfc-editor.org/rfc/rfc8044#section-3.5" class="relref">Section 3.5</a></span>.<a href="#section-3.3-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<div id="request-block-attribute-and-request-block-extended-attribute">
+<section id="section-3.3.1">
+          <h4 id="name-request-block-attribute-and">
+<a href="#section-3.3.1" class="section-number selfRef">3.3.1. </a><a href="#name-request-block-attribute-and" class="section-name selfRef">Request-Block-Attribute and Request-Block-Extended-Attribute</a>
+          </h4>
+<p id="section-3.3.1-1">RADIUS attributes are formatted as Type-Length-Value with a fixed one-byte type field.
+Since this allows for only 256 attributes, extended attributes have been defined in <span>[<a href="#RFC6929" class="cite xref">RFC6929</a>]</span>.
+Additionally, RADIUS has vendor-specific attributes (<span>[<a href="#RFC2865" class="cite xref">RFC2865</a>], <a href="https://rfc-editor.org/rfc/rfc2865#section-5.26" class="relref">Section 5.26</a></span> or <span>[<a href="#RFC6929" class="cite xref">RFC6929</a>], <a href="https://rfc-editor.org/rfc/rfc6929#section-2.4" class="relref">Section 2.4</a></span>, the header of which may not be known to all implementations.
+To still allow to filter on individual extended or vendor-specific attributes which might be unknown to the Enforcing Instance, we need a means to reference these attributes.<a href="#section-3.3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.3.1-2">The Request-Block-Attributes sub-attribute is used to reference the "primitive" RADIUS attributes, that is RADIUS attributes that only have the one-byte attribute type.
+Since every of these types have a one-byte-length, we can reduce the overhead by concatenating the attribute types, as they are all one byte.<a href="#section-3.3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.3.1-3">For the extended or vendor-specific attributes this is not as easy, since the length of the header may vary between the different attributes.
+Therefore, we have the Request-Block-Extended-Attribute sub-attribute, which references a single attribute that should be included in the blocklist.
+This sub-attribute can be included multiple times in the Request-Block attribute.<a href="#section-3.3.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="radius-instance-behavior">
+<section id="section-3.4">
+        <h3 id="name-radius-instance-behavior">
+<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-radius-instance-behavior" class="section-name selfRef">RADIUS Instance behavior</a>
+        </h3>
+<p id="section-3.4-1">TODO - mostly stub or not complete specification, general description of the behavior for every involved party<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+<div id="radius-proxy">
+<section id="section-3.4.1">
+          <h4 id="name-radius-proxy">
+<a href="#section-3.4.1" class="section-number selfRef">3.4.1. </a><a href="#name-radius-proxy" class="section-name selfRef">RADIUS proxy</a>
+          </h4>
+<p id="section-3.4.1-1">Any RADIUS Instance capable of delaying or blocking <span class="bcp14">SHOULD</span> add the Proxy-Capability attribute to every RADIUS Access-Request they send to a RADIUS server.
+If a RADIUS Instance receives a RADIUS request with this attribute, it <span class="bcp14">SHOULD</span> add its own capability, if not present already, to the proxied RADIUS packet and <span class="bcp14">SHOULD NOT</span> remove any other capability.<a href="#section-3.4.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.4.1-2">Upon reception a RADIUS Proxy needs to decide if it is the Enforcing Instance or not, by looking at the original request.
+This decision has to be done individually for the Response-Delay and the Request-Block policy.<a href="#section-3.4.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.4.1-3">If the received RADIUS response contains a Response-Delay attribute and the original request contained the Response-Delay capability, the RADIUS Proxy <span class="bcp14">SHOULD NOT</span> enforce the policy and instead forward the RADIUS response to the RADIUS client.
+If the original request did not contain the Response-Delay capability, the RADIUS Proxy <span class="bcp14">MUST</span> become the Enforcing Instance for the Response-Delay.<a href="#section-3.4.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.4.1-4">The algorithm for the Request-Block functionality is basically similar, but needs additional considerations in regards to present attributes.
+If the received RADIUS response contains a Request-Block attribute and the original request did not contain the Request-Block capability, the RADIUS Proxy <span class="bcp14">MUST</span> become the Enforcing Instance for the Request-Block.
+Otherwise, the RADIUS Proxy <span class="bcp14">MUST</span> check the presence of all attributes referenced in the Request-Block, whether or not they are present in the original RADIUS request.
+If an attribute was not present in the RADIUS request, the RADIUS Proxy <span class="bcp14">MUST</span> check if the missing attribute was added by the RADIUS Proxy and it is present in RADIUS request the RADIUS proxy sent to the next hop RADIUS server.
+In this case the RADIUS Proxy <span class="bcp14">MUST</span> become the Enforcing Instance, since any RADIUS Instances after the current RADIUS Instance cannot enforce the requested blocking, as at least one of the attributes is missing.
+If the missing attribute was not added by the RADIUS Proxy, the RADIUS Proxy <span class="bcp14">SHOULD</span> remove the Request-Block attribute before forwarding the packet to the next RADIUS Client.
+In this case, the missing attribute was added by a RADIUS Instance not capable of Response-Block and positioned between the current and a later Response-Block capable RADIUS Instance in the RADIUS Proxy Chain of the RADIUS Request.
+Since we have no RADIUS-native method to signal this condition back, the best approach to deal with this is to ignore the block request.
+By removing the Request-Block attribute from the response, we reduce the load on later RADIUS Instances on the RAIDUS Proxy Chain for the RADIUS Response, since they do not need to perform the attribute checks.
+This removes the Response-Block functionality completely without signalling back to the capable RADIUS Instances earlier in the Response Proxy Chain.
+There is no easy solution to this problem, but this is considered the best solution compared to complicated signalling mechanisms that would only be beneficial in a limited number of use cases and increase the complexity of implementations.
+We therefore rely on the RADIUS server not to request a block based on attributes that may have been added during the proxy chain.
+See <a href="#operational_recommendations" class="auto internal xref">Section 5</a> for further discussion.<a href="#section-3.4.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="enforcing-instance">
+<section id="section-3.4.2">
+          <h4 id="name-enforcing-instance">
+<a href="#section-3.4.2" class="section-number selfRef">3.4.2. </a><a href="#name-enforcing-instance" class="section-name selfRef">Enforcing Instance</a>
+          </h4>
+<p id="section-3.4.2-1">An Enforcing Instance is in charge of performing the requested action.<a href="#section-3.4.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.4.2-2">In general, an Enforcing Instance <span class="bcp14">MUST</span> remove the corresponding RADIUS Attribute with the request to delay or block from the RADIUS response before forwarding it to the next RADIUS Client.<a href="#section-3.4.2-2" class="pilcrow">¶</a></p>
+<div id="response-delay">
+<section id="section-3.4.2.1">
+            <h5 id="name-response-delay">
+<a href="#section-3.4.2.1" class="section-number selfRef">3.4.2.1. </a><a href="#name-response-delay" class="section-name selfRef">Response-Delay</a>
+            </h5>
+<p id="section-3.4.2.1-1">An Enforcing Instance for the Response-Delay <span class="bcp14">MUST</span> delay the response it received from the RADIUS server before forwarding the RADIUS response to the next RADIUS Client.
+If the Enforcing Instance is not a RADIUS Proxy, any action that would normally follow the reception of the RADIUS response <span class="bcp14">MUST</span> be delayed, i.e. the Enforcing Instance acts as if the RADIUS response has not been received until the delay timespan has passed.<a href="#section-3.4.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.1-2">An Enforcing Instance <span class="bcp14">MUST NOT</span> retransmit the RADIUS Request again to the next hop RADIUS Server if it already received a RADIUS response with the Response-Delay attribute.
+If the Enforcing Instance is a RADIUS Proxy and the RADIUS Client retransmits the RADIUS request, the Enforcing Instance <span class="bcp14">MUST</span> silently discard the retransmission.
+This only applies for Enforcing Instances, any other RADIUS Proxy will still follow its normal retransmission policy.<a href="#section-3.4.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.1-3">The Enforcing Instance <span class="bcp14">SHOULD</span> delay the RADIUS response according to the time span in the Response-Delay attributes, however the Enforcing Instance <span class="bcp14">MAY</span> have an upper limit for the delaying response timespan.
+By default, this upper limit <span class="bcp14">SHOULD</span> not be less than 10000 milliseconds (10 seconds) and it <span class="bcp14">SHOULD</span> be configurable by the administrator.<a href="#section-3.4.2.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.1-4"><span class="cref" id="reasoning">TODO: Reasoning behind the 10 sec delay: A common timeout limit for "response is missing, stop retrying" is 30 seconds, so by keeping the default upper limit below this we ensure that the response gets to the client, but it is delayed. We want to have the time configurable, because delaying responses uses up resources on the server. I delibirately didn't include text that the response should be sent if the ID space is exhausted, because the ID exhaustion may be the reason for the response delay further down the proxy chain, so in order to prevent impact on the later proxy chain, we need to shift the problem as far to the beginning of the proxy chain as possible.<span class="crefSource">Janfred</span></span><a href="#section-3.4.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.1-5"><span class="cref" id="lower_limit">TODO: Maybe we should define a lower limit for the upper-limit config, i.e. the upper limit must not be less than 500 milliseconds.<span class="crefSource">Janfred</span></span><a href="#section-3.4.2.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="request-block">
+<section id="section-3.4.2.2">
+            <h5 id="name-request-block">
+<a href="#section-3.4.2.2" class="section-number selfRef">3.4.2.2. </a><a href="#name-request-block" class="section-name selfRef">Request-Block</a>
+            </h5>
+<p id="section-3.4.2.2-1">An Enforcing Instance for the Request-Block <span class="bcp14">MUST</span> reject the RADIUS requests with certain attributes.<a href="#section-3.4.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.2-2">In order to avoid servers from blocking legitimate traffic by setting the block-filter to arbitrary values, the Request-Block is always dependent on the attributes of the original RADIUS requests.<a href="#section-3.4.2.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.2-3">TODO: From here only stub.<a href="#section-3.4.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.2-4">General algorithm:
+* create a list of attributes
+* attributes that appear multiple times in the request must be included multiple times in the list as well
+* for extended attributes: add every attribute to the list with the prefix in the request-block-extended-attribute (but skip over the length byte in the attribute in the request)
+* When a request is received with attributes matching the list (every attributes must be present and match): send an Access-Reject with an Error-Cause attribute set to value TBD4 (Request ratelimited)<a href="#section-3.4.2.2-4" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.2-5">The considerations for upper limit should probably also apply, similar to the response-delay, but with way higher defaults<a href="#section-3.4.2.2-5" class="pilcrow">¶</a></p>
+<p id="section-3.4.2.2-6">Maybe add functionality that the block is automatically timed out after a time when no login has be observed (to free up space), but "reset" the counter if observed again.<a href="#section-3.4.2.2-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-4">
+      <h2 id="name-security-considerations">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-4-1">TODO Security<a href="#section-4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="operational_recommendations">
+<section id="section-5">
+      <h2 id="name-recommendations-for-operato">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-recommendations-for-operato" class="section-name selfRef">Recommendations for Operators</a>
+      </h2>
+<p id="section-5-1">TODO.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">Elements to consider:
+* When should be delayed?
+  * nearing ID-Exhaustion due to many ongoing EAP sessions, add small delays
+  * on high server load add small delay
+  * add a delay for a reject. (FreeRADIUS has the option already, let's push this to the edge instead)
+* When should the home server request a block for how long?
+  * outer username in EAP wrong - probably hours
+  * inner username in EAP does not exist (and has several failed attempts shortly) - few minutes (outer username may stay the same if user changes only inner username)
+  * username points to someone that is no longer eligible for access - probably hours
+* When should a proxy request a block?
+  * repeated requests immediately after a reject with impact on the network - seconds to minutes
+  * realm in username is unroutable - minutes to hours
+* What are good and bad choices for attributes?
+  * good
+    * User-Name. Always.
+    * Calling-Station-ID
+    * Called-Station-ID (i.e. only block phone on this specific access point)
+    * NAS-Identifier, NAS-IPAddr, NAS-IPv6Addr (only block from this specific NAS, helpful in roaming scenarios)
+    * Operator-Name
+  * bad
+    * Proxy-State (added by proxies that might not understand it. <span class="bcp14">MUST NOT</span> be used)
+    * Any other proxy-specific attribute
+    * Only User-Name (may be too broad in case of anonymous identities)<a href="#section-5-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-6">
+      <h2 id="name-iana-considerations">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-6-1">This document will have IANA actions.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">They are still TODO in detail.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">Roughly the following things should be allocated:<a href="#section-6-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-4.1">
+          <p id="section-6-4.1.1">Attribute Type (possibly from extended attributes) for Proxy-Capability of type string (Extended-Attribute-1, TBD1)<a href="#section-6-4.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-6-4.2">
+          <p id="section-6-4.2.1">New registry table for for types in the Proxy-Capability attribute<a href="#section-6-4.2.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-4.2.2.1">
+              <p id="section-6-4.2.2.1.1">0 - reserved<a href="#section-6-4.2.2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.2.2.2">
+              <p id="section-6-4.2.2.2.1">1 - Response-Delay-Capable<a href="#section-6-4.2.2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.2.2.3">
+              <p id="section-6-4.2.2.3.1">2 - Request-Block-Capable<a href="#section-6-4.2.2.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.2.2.4">
+              <p id="section-6-4.2.2.4.1">3-125 - reserved for future use<a href="#section-6-4.2.2.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.2.2.5">
+              <p id="section-6-4.2.2.5.1">126 , 127 - experimental<a href="#section-6-4.2.2.5.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.2.2.6">
+              <p id="section-6-4.2.2.6.1">128 - 255 - Extended Capability<a href="#section-6-4.2.2.6.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-6-4.3">
+          <p id="section-6-4.3.1">Attribute Type for Response-Delay of type integer (Extended-Attribute-1, TBD2)<a href="#section-6-4.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-6-4.4">
+          <p id="section-6-4.4.1">Attribute Type for Request-Block of type tlv (Extended-Attribute-1, TBD3)<a href="#section-6-4.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-6-4.5">
+          <p id="section-6-4.5.1">New registry table for types in the Response-Delay attributes<a href="#section-6-4.5.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-4.5.2.1">
+              <p id="section-6-4.5.2.1.1">0 - reserved<a href="#section-6-4.5.2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.5.2.2">
+              <p id="section-6-4.5.2.2.1">1 - Request-Block-Period, Type integer, request to stop sending data for this particular user for period of time, time in seconds<a href="#section-6-4.5.2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.5.2.3">
+              <p id="section-6-4.5.2.3.1">2 - Request-Block-Attributes, type string<a href="#section-6-4.5.2.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.5.2.4">
+              <p id="section-6-4.5.2.4.1">3 - Request-Block-Extended-Attribute, type string<a href="#section-6-4.5.2.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.5.2.5">
+              <p id="section-6-4.5.2.5.1">4-250 - reserved for future use<a href="#section-6-4.5.2.5.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.5.2.6">
+              <p id="section-6-4.5.2.6.1">251 - private use<a href="#section-6-4.5.2.6.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6-4.5.2.7">
+              <p id="section-6-4.5.2.7.1">252-255 - experimental<a href="#section-6-4.5.2.7.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-6-4.6">
+          <p id="section-6-4.6.1">New entry in the registry for Values for RADIUS Attribute 101, Error-Cause Attribute<a href="#section-6-4.6.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-4.6.2.1">
+              <p id="section-6-4.6.2.1.1">4XX (TBD4) with description "Request ratelimited"<a href="#section-6-4.6.2.1.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+</li>
+      </ul>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-7">
+      <h2 id="name-references">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-7.1">
+        <h3 id="name-normative-references">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2865">[RFC2865]</dt>
+        <dd>
+<span class="refAuthor">Rigney, C.</span>, <span class="refAuthor">Willens, S.</span>, <span class="refAuthor">Rubens, A.</span>, and <span class="refAuthor">W. Simpson</span>, <span class="refTitle">"Remote Authentication Dial In User Service (RADIUS)"</span>, <span class="seriesInfo">RFC 2865</span>, <span class="seriesInfo">DOI 10.17487/RFC2865</span>, <time datetime="2000-06" class="refDate">June 2000</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2865">https://www.rfc-editor.org/rfc/rfc2865</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8044">[RFC8044]</dt>
+        <dd>
+<span class="refAuthor">DeKok, A.</span>, <span class="refTitle">"Data Types in RADIUS"</span>, <span class="seriesInfo">RFC 8044</span>, <span class="seriesInfo">DOI 10.17487/RFC8044</span>, <time datetime="2017-01" class="refDate">January 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8044">https://www.rfc-editor.org/rfc/rfc8044</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+      <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-7.2">
+        <h3 id="name-informative-references">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC6929">[RFC6929]</dt>
+      <dd>
+<span class="refAuthor">DeKok, A.</span> and <span class="refAuthor">A. Lior</span>, <span class="refTitle">"Remote Authentication Dial In User Service (RADIUS) Protocol Extensions"</span>, <span class="seriesInfo">RFC 6929</span>, <span class="seriesInfo">DOI 10.17487/RFC6929</span>, <time datetime="2013-04" class="refDate">April 2013</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6929">https://www.rfc-editor.org/rfc/rfc6929</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="document-status">
+<section id="appendix-A">
+      <h2 id="name-document-status">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-document-status" class="section-name selfRef">Document Status</a>
+      </h2>
+<p id="appendix-A-1">Note to RFC Editor: Remove this section before publication<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<div id="change-history">
+<section id="appendix-A.1">
+        <h3 id="name-change-history">
+<a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-change-history" class="section-name selfRef">Change History</a>
+        </h3>
+<p id="appendix-A.1-1">draft-janfred-radext-radius-reject-cache-00:<a href="#appendix-A.1-1" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="appendix-A.1-2.1">
+            <ul class="normal">
+<li class="normal" id="appendix-A.1-2.1.1.1">
+                <p id="appendix-A.1-2.1.1.1.1">Renaming of the draft, since this does not do congestion control.<a href="#appendix-A.1-2.1.1.1.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="appendix-A.1-2.1.1.1.2.1">
+                    <p id="appendix-A.1-2.1.1.1.2.1.1">Introduce signalling in Status-Server for response-delay<a href="#appendix-A.1-2.1.1.1.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+        </ul>
+<p id="appendix-A.1-3">draft-janfred-radext-radius-congestion-control-01:<a href="#appendix-A.1-3" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="appendix-A.1-4.1">
+            <ul class="normal">
+<li class="normal" id="appendix-A.1-4.1.1.1">
+                <p id="appendix-A.1-4.1.1.1.1">no significant changes<a href="#appendix-A.1-4.1.1.1.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+</li>
+        </ul>
+<p id="appendix-A.1-5">draft-janfred-radext-radius-congestion-control-00:<a href="#appendix-A.1-5" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="appendix-A.1-6.1">
+            <ul class="normal">
+<li class="normal" id="appendix-A.1-6.1.1.1">
+                <p id="appendix-A.1-6.1.1.1.1">Initial draft version<a href="#appendix-A.1-6.1.1.1.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+</li>
+        </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-B">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-B-1">TODO acknowledge.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-C">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Jan-Frederik Rieckers</span></div>
+<div dir="auto" class="left"><span class="org">Deutsches Forschungsnetz | German National Research and Education Network</span></div>
+<div dir="auto" class="left"><span class="street-address">Alexanderplatz 1</span></div>
+<div dir="auto" class="left">
+<span class="postal-code">10178</span> <span class="locality">Berlin</span>
+</div>
+<div dir="auto" class="left"><span class="country-name">Germany</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:rieckers@dfn.de" class="email">rieckers@dfn.de</a>
+</div>
+<div class="url">
+<span>URI:</span>
+<a href="www.dfn.de" class="url">www.dfn.de</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>

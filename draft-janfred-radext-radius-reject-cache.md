@@ -8,13 +8,13 @@ category: exp
 docname: draft-janfred-radext-radius-reject-cache-latest
 submissiontype: IETF
 v: 3
-area: ""
+area: "Security"
 workgroup: "RADIUS EXTensions"
 keyword:
  - RADIUS
 venue:
   group: "RADIUS EXTensions"
-  type: ""
+  type: "Working Group"
   mail: "radext@ietf.org"
 
 author:

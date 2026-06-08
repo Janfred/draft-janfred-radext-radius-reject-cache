@@ -44,7 +44,7 @@ To reduce server load, this document adds a method for RADIUS servers to signal 
 
 # Introduction
 
-The RADIUS protocol {{RFC2865}} does not have a means to signal a server overload or a congestion to RADIUS clients.
+The RADIUS protocol {{!RFC2865}} does not have a means to signal a server overload or a congestion to RADIUS clients.
 These overload situations may be a result of a high load of legitimate traffic and might even be worsened by retransmissions of packets the server failed to answer due to the high load.
 These situation can happen in a lost of scenarios.
 In RADIUS proxy fabric, a server overload may even result from a single RADIUS client, for example when an EAP supplicant immediately starts a new authentication try without delay when getting a reject.
